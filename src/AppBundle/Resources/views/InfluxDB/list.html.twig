@@ -1,0 +1,29 @@
+{% extends "::base.html.twig" %}
+
+{% block title %}AppBundle:InfluxDB:list{% endblock %}
+
+{% block body %}
+<h1>Welcome to the InfluxDB:list page</h1>
+{% for serie in series %}
+    {% if serie.name is defined %}
+    <h2>{{ serie.name }}</h2>
+    <table style="border: 1px solid #000; width: 100%">
+        <thead>
+        {% for column in serie.columns %}
+        <th style="border: 1px solid #CCC">{{ column }}</th>
+        {% endfor %}
+        </thead>
+        <tbody>
+        {% for value in serie.values %}
+            <tr>
+            {% for elem in value %}
+                <td style="border: 1px solid #CCC">{{ elem }}</td>
+            {% endfor %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+{% endfor %}
+{% endblock %}
+

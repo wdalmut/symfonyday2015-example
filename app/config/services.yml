@@ -1,0 +1,44 @@
+# Learn more about services, parameters and containers at
+# http://symfony.com/doc/current/book/service_container.html
+parameters:
+  influxdb_db_name: "myapp"
+  influxdb_host: "localhost"
+  influxdb_udp_port: 4441
+  influxdb_http_port: 8086
+
+services:
+  influxdb:
+    class: InfluxDB\Client
+    arguments: ["@influxdb_reader", "@influxdb_writer"]
+
+  influxdb_http_client:
+    class: GuzzleHttp\Client
+
+  influxdb_reader:
+    class: InfluxDB\Adapter\Http\Reader
+    arguments: ["@influxdb_http_client", "@influxdb_http_options"]
+
+  influxdb_writer:
+    class: InfluxDB\Adapter\Udp\Writer
+    arguments: ["@influxdb_udp_options"]
+
+  influxdb_udp_options:
+    class: InfluxDB\Adapter\Udp\Options
+    calls:
+      - ["setHost", ["%influxdb_host%"]]
+      - ["setPort", ["%influxdb_udp_port%"]]
+      - ["setTags", [{"env": "%kernel.environment%"}]]
+  influxdb_http_options:
+    class: InfluxDB\Adapter\Http\Options
+    calls:
+      - ["setDatabase", ["%influxdb_db_name%"]]
+      - ["setHost", ["%influxdb_host%"]]
+      - ["setPort", ["%influxdb_http_port%"]]
+
+  monitor_listener:
+    class: AppBundle\Listener\MonitorListener
+    arguments: ["@influxdb", "@debug.stopwatch"]
+    tags:
+      - { name: kernel.event_listener, event: kernel.request, method: startStopwatch }
+      - { name: kernel.event_listener, event: kernel.response, method: stopStopwatch }
+
